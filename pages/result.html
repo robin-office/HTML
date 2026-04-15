@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result Portal - ALP Institute</title>
+  <meta name="description" content="Student result login portal for ALP Institute exams">
+  <link rel="stylesheet" href="../css/styles.css">
+
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <style>
+    .result-card {
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .result-display {
+      display: none;
+    }
+    .result-display.show {
+      display: block;
+    }
+    .result-hero {
+      text-align: center;
+      padding: 40px 32px;
+      border-radius: var(--radius-xl);
+      margin-bottom: 24px;
+    }
+    .result-hero.pass {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .result-hero.fail {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .result-hero .result-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: #fff;
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+    }
+    .result-hero h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .result-hero .marks-display {
+      font-size: 52px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      margin: 12px 0;
+    }
+    .result-hero p { color: rgba(255,255,255,0.8); font-size: 14px; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .detail-item {
+      padding: 16px;
+      background: var(--bg-hover);
+      border-radius: var(--radius-md);
+    }
+    .detail-item .detail-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .detail-item .detail-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .promotion-banner {
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--primary-200);
+      background: var(--primary-50);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    [data-theme="dark"] .promotion-banner {
+      background: rgba(99,102,241,0.08);
+      border-color: rgba(99,102,241,0.2);
+    }
+    .promotion-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-md);
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    @media (max-width: 480px) {
+      .detail-grid { grid-template-columns: 1fr; }
+      .result-hero .marks-display { font-size: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading Result Portal...</div>
+  </div>
+
+  <div class="page-centered" style="flex-direction: column; gap: 0;">
+    <div style="width: 100%; max-width: 560px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+      <a href="../index.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> Home</a>
+      <button class="navbar-btn theme-toggle" id="themeToggle" onclick="Theme.toggle()"><i data-lucide="moon"></i></button>
+    </div>
+
+    <!-- Login Form -->
+    <div class="auth-card result-card" id="loginCard" data-aos="fade-up">
+      <div class="auth-header" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
+        <div class="auth-logo"><i data-lucide="graduation-cap"></i></div>
+        <h2>Student Result Portal</h2>
+        <p>Login to view your exam result and certificate eligibility</p>
+      </div>
+      <div class="auth-body">
+        <form id="resultLoginForm">
+          <div class="form-group">
+            <label class="form-label">Student ID (Username)</label>
+            <input type="text" id="resStudentId" class="form-control" placeholder="e.g., STU001" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Parcel ID (Password)</label>
+            <input type="text" id="resParcelId" class="form-control" placeholder="e.g., ALP-26-0001" required>
+          </div>
+          <button type="submit" class="btn btn-lg btn-block" id="resLoginBtn" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; box-shadow: 0 4px 12px rgba(6,182,212,0.3);">
+            <i data-lucide="search"></i> View Result
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Result Display -->
+    <div class="result-display result-card" id="resultDisplay">
+      <!-- Result Hero -->
+      <div class="result-hero" id="resultHero">
+        <div class="result-icon" id="resultIcon"></div>
+        <h2 id="resultLabel">PASS</h2>
+        <div class="marks-display" id="marksDisplay">78</div>
+        <p id="resultMsg">Congratulations! You have passed the examination.</p>
+      </div>
+
+      <!-- Details -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-body">
+          <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 16px;">
+            <i data-lucide="user" style="margin-right: 8px; color: var(--primary-500);"></i>Student Details
+          </h3>
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-label">Student ID</div><div class="detail-value" id="dStudentId">—</div></div>
+            <div class="detail-item"><div class="detail-label">Name</div><div class="detail-value" id="dName">—</div></div>
+            <div class="detail-item"><div class="detail-label">Course Level</div><div class="detail-value" id="dCourse">—</div></div>
+            <div class="detail-item"><div class="detail-label">Parcel ID</div><div class="detail-value" id="dParcelId">—</div></div>
+            <div class="detail-item"><div class="detail-label">Marks Obtained</div><div class="detail-value" id="dMarks">—</div></div>
+            <div class="detail-item"><div class="detail-label">Certificate</div><div class="detail-value" id="dCertificate">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Promotion Banner -->
+      <div id="promotionSection" style="display: none; margin-bottom: 24px;">
+        <div class="promotion-banner">
+          <div class="promotion-icon"><i data-lucide="trending-up"></i></div>
+          <div>
+            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;" id="promoTitle">Next Course Available!</div>
+            <div style="font-size: 13px; color: var(--text-secondary);" id="promoDesc">You're eligible for the next level.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="transaction.html" class="btn btn-primary" id="payBtn" style="display: none;"><i data-lucide="credit-card"></i> Pay for Certificate</a>
+        <button class="btn btn-outline" onclick="backToLogin()"><i data-lucide="arrow-left"></i> Back</button>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; text-align: center;">
+      <p style="font-size: 13px; color: var(--text-tertiary);">
+        Developed By <a href="https://a-santhosh-hub.github.io/in/" target="_blank" style="color: var(--primary-500); font-weight: 600;">Santhosh A</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    document.getElementById('resultLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const studentId = document.getElementById('resStudentId').value.trim();
+      const parcelId = document.getElementById('resParcelId').value.trim();
+      const btn = document.getElementById('resLoginBtn');
+
+      if (!studentId || !parcelId) {
+        Toast.error('Error', 'Please fill all fields');
+        return;
+      }
+
+      Loading.setButton(btn, true);
+
+      try {
+        const result = await API.studentLogin(studentId, parcelId);
+        displayResult(result.data);
+      } catch (error) {
+        // Demo fallback
+        if (studentId === 'STU001' && parcelId === 'ALP-26-0001') {
+          displayResult({
+            Student_ID: 'STU001', Student_Name: 'Priya Sharma', Course_Level: 'Basic',
+            Parcel_ID: 'ALP-26-0001', Marks: '78', Result: 'PASS',
+            Certificate_Status: 'Pending', Next_Course_Level: 'Advanced'
+          });
+        } else if (studentId === 'STU002' && parcelId === 'ALP-26-0002') {
+          displayResult({
+            Student_ID: 'STU002', Student_Name: 'Arjun Patel', Course_Level: 'Advanced',
+            Parcel_ID: 'ALP-26-0002', Marks: '35', Result: 'FAIL',
+            Certificate_Status: '', Next_Course_Level: ''
+          });
+        } else {
+          Toast.error('Login Failed', 'Invalid Student ID or Parcel ID. Please try again.');
+        }
+      } finally {
+        Loading.setButton(btn, false);
+      }
+    });
+
+    function displayResult(data) {
+      const isPassed = data.Result === 'PASS';
+      const marks = data.Marks || '—';
+
+      // Hero
+      const hero = document.getElementById('resultHero');
+      hero.className = `result-hero ${isPassed ? 'pass' : 'fail'}`;
+      document.getElementById('resultIcon').innerHTML = `<i data-lucide="${isPassed ? 'trophy' : 'x-circle'}"></i>`;
+      document.getElementById('resultLabel').textContent = isPassed ? 'PASSED' : 'FAILED';
+      document.getElementById('marksDisplay').textContent = marks;
+      document.getElementById('resultMsg').textContent = isPassed
+        ? 'Congratulations! You have passed the examination.'
+        : 'Unfortunately, you did not pass. Please try again.';
+
+      // Details
+      document.getElementById('dStudentId').textContent = data.Student_ID;
+      document.getElementById('dName').textContent = data.Student_Name;
+      document.getElementById('dCourse').textContent = data.Course_Level;
+      document.getElementById('dParcelId').textContent = data.Parcel_ID;
+      document.getElementById('dMarks').textContent = `${marks} / 100`;
+      document.getElementById('dCertificate').textContent = isPassed
+        ? (data.Certificate_Status || 'Eligible')
+        : 'Not Eligible';
+
+      // Promotion
+      if (isPassed && data.Next_Course_Level && data.Next_Course_Level !== 'Completed') {
+        document.getElementById('promotionSection').style.display = 'block';
+        document.getElementById('promoTitle').textContent = `Next: ${data.Next_Course_Level} Course`;
+        document.getElementById('promoDesc').textContent = `You're eligible to advance to the ${data.Next_Course_Level} level. Contact ALP office for registration.`;
+      } else if (isPassed && data.Next_Course_Level === 'Completed') {
+        document.getElementById('promotionSection').style.display = 'block';
+        document.getElementById('promoTitle').textContent = '🎓 All Courses Completed!';
+        document.getElementById('promoDesc').textContent = 'Congratulations! You have completed all course levels.';
+      } else {
+        document.getElementById('promotionSection').style.display = 'none';
+      }
+
+      // Pay button
+      document.getElementById('payBtn').style.display = isPassed ? 'inline-flex' : 'none';
+
+      // Switch view
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('resultDisplay').classList.add('show');
+    }
+
+    function backToLogin() {
+      document.getElementById('loginCard').style.display = 'block';
+      document.getElementById('resultDisplay').classList.remove('show');
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    lucide.createIcons();
+    window.addEventListener('load', () => document.getElementById('pageLoader').classList.add('hidden'));
+  </script>
+</body>
+</html>

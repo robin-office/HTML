@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Parcel - ALP Institute</title>
+  <meta name="description" content="Student parcel submission portal for ALP Institute">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <style>
+    /* ── STRICT WHITE AND YELLOW THEME OVERRIDES ── */
+    :root {
+      --primary-50: #fefce8 !important;
+      --primary-100: #fef9c3 !important;
+      --primary-200: #fef08a !important;
+      --primary-300: #fde047 !important;
+      --primary-400: #facc15 !important;
+      --primary-500: #eab308 !important; /* Main Yellow */
+      --primary-600: #ca8a04 !important;
+      --primary-700: #a16207 !important;
+      --primary-800: #854d0e !important;
+      --primary-900: #713f12 !important;
+
+      --bg-primary: #ffffff !important;
+      --bg-secondary: #fefce8 !important;
+      --bg-card: #ffffff !important;
+      --bg-input: #ffffff !important;
+      
+      --text-primary: #171717 !important;
+      --text-secondary: #525252 !important;
+      --text-inverse: #171717 !important; /* For contrast on yellow buttons */
+
+      --gradient-primary: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+      --border-focus: #facc15 !important;
+    }
+    
+    body { background-color: #ffffff !important; }
+    
+    .auth-card {
+      border: 1px solid #fef08a !important;
+      box-shadow: 0 10px 25px rgba(234, 179, 8, 0.15) !important;
+    }
+    
+    .auth-logo {
+      background: var(--gradient-primary) !important;
+      color: #171717 !important;
+    }
+    
+    .btn-primary {
+      color: #171717 !important;
+      font-weight: 700 !important;
+    }
+    
+    /* Remove the blue background glow and container tint */
+    .page-centered::before {
+      display: none !important;
+    }
+    .page-centered {
+      background: #ffffff !important;
+    }
+    
+    /* ── Success Overlay Animation ── */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(8px);
+    }
+    .success-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .success-content {
+      text-align: center;
+      transform: scale(0.8) translateY(20px);
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      opacity: 0;
+    }
+    .success-overlay.show .success-content {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    .success-icon-wrapper {
+      width: 100px;
+      height: 100px;
+      background: var(--primary-500);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: #171717;
+      box-shadow: 0 0 0 15px var(--primary-100);
+      animation: pulse-ring 2s infinite;
+    }
+    .success-icon {
+      width: 50px;
+      height: 50px;
+    }
+    .success-content h2 {
+      font-size: 32px;
+      color: #171717;
+      margin-bottom: 8px;
+    }
+    .success-content p {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 var(--primary-200); }
+      70% { box-shadow: 0 0 0 20px rgba(234, 179, 8, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading...</div>
+  </div>
+
+  <!-- Success Overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-content">
+      <div class="success-icon-wrapper">
+        <i data-lucide="check-circle" class="success-icon"></i>
+      </div>
+      <h2>All Done!</h2>
+      <p>Your exam parcel has been successfully submitted.</p>
+    </div>
+  </div>
+
+  <div class="page-centered" style="flex-direction: column; gap: 0;">
+
+    <div class="auth-card" style="max-width: 640px;" data-aos="fade-up">
+      <div class="auth-header">
+        <div class="auth-logo"><i data-lucide="package-plus"></i></div>
+        <h2>Submit Exam Parcel</h2>
+        <p>Fill in your details to submit your exam parcel for processing</p>
+      </div>
+      <div class="auth-body">
+        <form id="parcelForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Student ID *</label>
+              <input type="text" id="studentId" class="form-control" placeholder="e.g., STU001" required>
+              <span class="form-error">Student ID is required</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Student Name *</label>
+              <input type="text" id="studentName" class="form-control" placeholder="Full Name" required>
+              <span class="form-error">Name is required</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Class Category *</label>
+              <select id="classCategory" class="form-control dynamic-course-dropdown" required>
+                <option value="">Select Category</option>
+              </select>
+              <span class="form-error">Please select a category</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number *</label>
+              <input type="tel" id="mobile" class="form-control" placeholder="10-digit number" pattern="[0-9]{10}" required>
+              <span class="form-error">Valid 10-digit number required</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Location *</label>
+              <input type="text" id="location" class="form-control" placeholder="City / Town" required>
+              <span class="form-error">Location is required</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Parcel Type *</label>
+              <select id="parcelType" class="form-control" required>
+                <option value="">Select Type</option>
+                <option value="Answer Sheet">Answer Sheet</option>
+                <option value="Assignment">Assignment</option>
+                <option value="Practical Record">Practical Record</option>
+                <option value="Project Report">Project Report</option>
+              </select>
+              <span class="form-error">Please select parcel type</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Parcel Status</label>
+            <select id="parcelStatus" class="form-control">
+              <option value="Dispatched">Dispatched</option>
+              <option value="In Transit">In Transit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Additional Notes</label>
+            <textarea id="notes" class="form-control" placeholder="Any special instructions or remarks..." rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
+            <i data-lucide="send"></i> Submit Parcel
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; text-align: center;">
+      <p style="font-size: 13px; color: var(--text-tertiary);">
+        Developed By <a href="https://a-santhosh-hub.github.io/in/" target="_blank" style="color: var(--primary-500); font-weight: 600;">Santhosh A</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    lucide.createIcons();
+    window.addEventListener('load', async () => {
+      // Load courses
+      try {
+        const courses = await API.getCourses();
+        if (courses.status === 'success' && courses.data) {
+          const sels = document.querySelectorAll('.dynamic-course-dropdown');
+          sels.forEach(sel => {
+            const current = sel.value;
+            sel.innerHTML = '<option value="">Select Category</option>' + courses.data.map(c => `<option value="${c.Course_Name}">${c.Course_Name}</option>`).join('');
+            if (current) sel.value = current;
+          });
+        }
+      } catch (e) { console.error('Failed to load courses', e); }
+      
+      document.getElementById('pageLoader').classList.add('hidden');
+    });
+
+    document.getElementById('parcelForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+
+      const fields = {
+        studentId: document.getElementById('studentId').value.trim(),
+        studentName: document.getElementById('studentName').value.trim(),
+        classCategory: document.getElementById('classCategory').value,
+        mobile: document.getElementById('mobile').value.trim(),
+        location: document.getElementById('location').value.trim(),
+        parcelType: document.getElementById('parcelType').value,
+        parcelStatus: document.getElementById('parcelStatus').value,
+      };
+
+      // Validate
+      let valid = true;
+      Object.entries(fields).forEach(([key, val]) => {
+        const el = document.getElementById(key === 'classCategory' ? 'classCategory' : key);
+        if (!val) { el.classList.add('is-error'); valid = false; }
+        else { el.classList.remove('is-error'); }
+      });
+      if (!valid) { Toast.error('Validation', 'Please fill all required fields'); return; }
+
+      Loading.setButton(btn, true);
+      try {
+        await API.submitParcel(fields);
+        
+        // Hide button spinner immediately
+        Loading.setButton(btn, false);
+        
+        // Show success animation overlay
+        const overlay = document.getElementById('successOverlay');
+        overlay.classList.add('show');
+        
+        // Wait 3 seconds to let animation play, then refresh local page
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+        
+      } catch (error) {
+        Toast.error('Submission Failed', error.message);
+        Loading.setButton(btn, false);
+      }
+    });
+  </script>
+</body>
+</html>

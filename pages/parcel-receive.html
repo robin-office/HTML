@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parcel Receive - ALP Institute</title>
+  <meta name="description" content="Staff panel to search, receive, and process exam parcels">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading Staff Panel...</div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">A</div>
+        <div class="brand-text">
+          <span class="brand-name">ALP Institute</span>
+          <span class="brand-sub">Staff Panel</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Navigation</div>
+        <a href="../index.html" class="nav-item"><i data-lucide="home"></i> Home</a>
+        <a href="parcel-entry.html" class="nav-item"><i data-lucide="package-plus"></i> Parcel Entry</a>
+        <a href="parcel-receive.html" class="nav-item active"><i data-lucide="inbox"></i> Receive Parcel</a>
+        <a href="admin-dashboard.html" class="nav-item"><i data-lucide="layout-dashboard"></i> Admin Dashboard</a>
+        <a href="teacher-dashboard.html" class="nav-item"><i data-lucide="pen-tool"></i> Teacher Panel</a>
+        <a href="result.html" class="nav-item"><i data-lucide="graduation-cap"></i> Result Portal</a>
+        <a href="transaction.html" class="nav-item"><i data-lucide="credit-card"></i> Payments</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar">S</div>
+          <div class="user-info">
+            <span class="user-name">Staff User</span>
+            <span class="user-role">Office Staff</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+      <!-- Navbar -->
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+          <div>
+            <h1 class="page-title">Parcel Receive</h1>
+            <p class="page-subtitle">Search and mark parcels as received</p>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <button class="navbar-btn theme-toggle" id="themeToggle" onclick="Theme.toggle()"><i data-lucide="moon"></i></button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="page-content">
+        <!-- Search -->
+        <div class="card" data-aos="fade-up" style="margin-bottom: 24px;">
+          <div class="card-body">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+              <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                <label class="form-label">Search by Student ID, Name, or Mobile</label>
+                <div class="search-bar" style="max-width: 100%;">
+                  <i data-lucide="search"></i>
+                  <input type="text" id="searchInput" placeholder="Enter Student ID, Name, or Mobile..." style="width: 100%;">
+                </div>
+              </div>
+              <button class="btn btn-primary" id="searchBtn" onclick="performSearch()">
+                <i data-lucide="search"></i> Search
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3><i data-lucide="list" style="margin-right: 8px;"></i>Parcel List</h3>
+              <span id="resultCount" class="badge badge-gray">Loading...</span>
+            </div>
+            <div class="tabs-container" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color);">
+              <button class="tab-primary active" id="tabPending" onclick="switchTab('pending')" style="padding: 10px 20px; font-weight: 600; border-bottom: 2px solid var(--primary-500); background: transparent; color: var(--primary-500); cursor: pointer; border-top: none; border-left: none; border-right: none;">Pending Receive</button>
+              <button class="tab-primary" id="tabReceived" onclick="switchTab('received')" style="padding: 10px 20px; font-weight: 600; border-bottom: 2px solid transparent; background: transparent; color: var(--text-secondary); cursor: pointer; border-top: none; border-left: none; border-right: none;">Already Received</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+              <table class="data-table" id="resultsTable">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Course</th>
+                    <th>Parcel Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsBody">
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty-state">
+                        <i data-lucide="loader" class="spin"></i>
+                        <h3>Loading Parcels...</h3>
+                        <p>Please wait while we fetch the latest data.</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Receive Success Modal -->
+        <div class="modal-overlay" id="receiveModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3><i data-lucide="check-circle" style="color: var(--success-500); margin-right: 8px;"></i>Parcel Received!</h3>
+              <button class="modal-close" onclick="closeModal('receiveModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 32px;">
+              <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--success-50); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                <i data-lucide="check" style="width: 32px; height: 32px; color: var(--success-500);"></i>
+              </div>
+              <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Parcel Received Successfully</h3>
+              <p style="color: var(--text-secondary); margin-bottom: 12px;">Parcel ID has been generated:</p>
+              <div style="font-family: 'Plus Jakarta Sans', monospace; font-size: 28px; font-weight: 900; color: var(--primary-500); margin-bottom: 16px;" id="generatedParcelId">ALP-26-0001</div>
+              <p style="font-size: 13px; color: var(--text-tertiary);" id="receiveStudentInfo"></p>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" onclick="closeModal('receiveModal')">Close</button>
+              <button class="btn btn-whatsapp" id="modalWhatsappBtn"><i data-lucide="message-circle"></i> Send WhatsApp</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Modal -->
+        <div class="modal-overlay" id="whatsappModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h3><i data-lucide="message-circle" style="color: #25d366; margin-right: 8px;"></i>WhatsApp Notification</h3>
+              <button class="modal-close" onclick="closeModal('whatsappModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+              <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">Send the following message to the student:</p>
+              <div style="background: var(--bg-hover); padding: 16px; border-radius: var(--radius-md); font-size: 14px; line-height: 1.8; color: var(--text-primary);" id="whatsappPreview">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" onclick="closeModal('whatsappModal')">Cancel</button>
+              <button class="btn btn-whatsapp" id="sendWhatsappBtn"><i data-lucide="send"></i> Send via WhatsApp</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p>Developed By <a href="https://a-santhosh-hub.github.io/in/" target="_blank">Santhosh A</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    lucide.createIcons();
+    let allParcels = [];
+    let currentFilter = 'pending';
+
+    window.addEventListener('load', async () => {
+      document.getElementById('pageLoader').classList.add('hidden');
+      await loadAllParcels();
+    });
+
+    async function loadAllParcels() {
+      try {
+        const result = await API.getAllStudents();
+        // Sort descending so newest is first
+        allParcels = (result.data || []).reverse();
+        renderFilteredParcels();
+      } catch (error) {
+        Toast.error('Load Failed', 'Could not load parcels. ' + error.message);
+        document.getElementById('resultCount').textContent = 'Error';
+      }
+    }
+
+    // Tabs
+    function switchTab(tab) {
+      currentFilter = tab;
+      if (tab === 'pending') {
+        document.getElementById('tabPending').style.borderBottomColor = 'var(--primary-500)';
+        document.getElementById('tabPending').style.color = 'var(--primary-500)';
+        document.getElementById('tabReceived').style.borderBottomColor = 'transparent';
+        document.getElementById('tabReceived').style.color = 'var(--text-secondary)';
+      } else {
+        document.getElementById('tabReceived').style.borderBottomColor = 'var(--primary-500)';
+        document.getElementById('tabReceived').style.color = 'var(--primary-500)';
+        document.getElementById('tabPending').style.borderBottomColor = 'transparent';
+        document.getElementById('tabPending').style.color = 'var(--text-secondary)';
+      }
+      renderFilteredParcels();
+    }
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', () => {
+      renderFilteredParcels();
+    });
+    
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') renderFilteredParcels();
+    });
+
+    async function performSearch() {
+      renderFilteredParcels();
+    }
+
+    function renderFilteredParcels() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      
+      let data = allParcels.filter(row => {
+        // Tab filter
+        const isReceived = row.Office_Received === 'Yes';
+        if (currentFilter === 'pending' && isReceived) return false;
+        if (currentFilter === 'received' && !isReceived) return false;
+        
+        // Search filter
+        if (query) {
+          if (!(row.Student_ID || '').toLowerCase().includes(query) &&
+              !(row.Student_Name || '').toLowerCase().includes(query) &&
+              !(row.Mobile || '').includes(query)) {
+            return false;
+          }
+        }
+        return true;
+      });
+      
+      renderResults(data);
+    }
+
+    function renderResults(data) {
+      const tbody = document.getElementById('resultsBody');
+      const count = document.getElementById('resultCount');
+      count.textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7">
+          <div class="empty-state">
+            <i data-lucide="${currentFilter === 'pending' ? 'check-circle' : 'package-x'}"></i>
+            <h3>${currentFilter === 'pending' ? 'All Caught Up!' : 'No Parcels Found'}</h3>
+            <p>${currentFilter === 'pending' ? 'There are no pending parcels to receive right now.' : 'Try adjusting your search filters.'}</p>
+          </div>
+        </td></tr>`;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = data.map(row => {
+        const isReceived = row.Office_Received === 'Yes';
+        const statusBadge = isReceived
+          ? `<span class="badge badge-success badge-dot">Received</span>`
+          : `<span class="badge badge-warning badge-dot">Pending</span>`;
+
+        return `<tr data-student='${JSON.stringify(row).replace(/'/g, "&#39;")}'>
+          <td><strong>${row.Student_ID || ''}</strong></td>
+          <td>${row.Student_Name || ''}</td>
+          <td>${row.Mobile || ''}</td>
+          <td><span class="badge badge-primary">${row.Course_Level || ''}</span></td>
+          <td>${row.Parcel_Type || ''}</td>
+          <td>${statusBadge}</td>
+          <td>
+            ${!isReceived ? `<button class="btn btn-success btn-sm" onclick="markReceived(this, '${row.Student_ID}')">
+              <i data-lucide="check"></i> Receive
+            </button>` : `<div style="display: flex; gap: 4px;"><button class="btn btn-whatsapp btn-sm" onclick="showWhatsApp('${row.Student_Name}', '${row.Mobile}', '${row.Parcel_ID || ''}')">
+              <i data-lucide="message-circle"></i> WhatsApp
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="undoReceive(this, '${row.Student_ID}')" title="Undo Receive">
+              <i data-lucide="rotate-ccw"></i> Undo
+            </button></div>`}
+          </td>
+        </tr>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function markReceived(btn, studentId) {
+      Loading.setButton(btn, true);
+      try {
+        const result = await API.receiveParcel(studentId);
+        const parcelId = result.parcelId || 'ALP-XX-XXXX';
+
+        // Get student data
+        const row = btn.closest('tr');
+        const data = JSON.parse(row.dataset.student);
+
+        // Show success modal with parcel ID
+        document.getElementById('generatedParcelId').textContent = parcelId;
+        document.getElementById('receiveStudentInfo').textContent = `Student: ${data.Student_Name} | ID: ${data.Student_ID}`;
+        document.getElementById('modalWhatsappBtn').onclick = () => {
+          closeModal('receiveModal');
+          showWhatsApp(data.Student_Name, data.Mobile, parcelId);
+        };
+        document.getElementById('receiveModal').classList.add('active');
+        lucide.createIcons();
+
+        Toast.success('Parcel Received!', `Parcel ID: ${parcelId}`);
+
+        // Update global state and re-render
+        const idx = allParcels.findIndex(p => p.Student_ID === studentId);
+        if (idx !== -1) {
+          allParcels[idx].Office_Received = 'Yes';
+          allParcels[idx].Parcel_ID = parcelId;
+        }
+        renderFilteredParcels();
+      } catch (error) {
+        Toast.error('Error', error.message);
+        Loading.setButton(btn, false);
+      }
+    }
+
+    async function undoReceive(btn, studentId) {
+      if (!confirm('Are you sure you want to mark this parcel as NOT received? This will remove its generated Parcel ID.')) return;
+      
+      Loading.setButton(btn, true);
+      try {
+        await API.updateStudent(studentId, { Office_Received: 'No', Parcel_ID: '' });
+        Toast.success('Updated', 'Parcel marked as Not Received');
+        
+        // Update global state and re-render
+        const idx = allParcels.findIndex(p => p.Student_ID === studentId);
+        if (idx !== -1) {
+          allParcels[idx].Office_Received = 'No';
+          allParcels[idx].Parcel_ID = '';
+        }
+        renderFilteredParcels();
+      } catch (error) {
+        Toast.error('Error', 'Could not undo receive. ' + error.message);
+        Loading.setButton(btn, false);
+      }
+    }
+
+    function showWhatsApp(name, mobile, parcelId) {
+      const message = `Hello ${name},\nYour parcel has been received successfully.\nParcel ID: ${parcelId}\n– ALP Office`;
+      document.getElementById('whatsappPreview').textContent = message;
+      document.getElementById('sendWhatsappBtn').onclick = () => {
+        openWhatsApp(mobile, message);
+        closeModal('whatsappModal');
+      };
+      document.getElementById('whatsappModal').classList.add('active');
+      lucide.createIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+  </script>
+</body>
+</html>

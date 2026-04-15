@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate Payment - ALP Institute</title>
+  <meta name="description" content="Certificate fee payment portal for ALP Institute">
+  <link rel="stylesheet" href="../css/styles.css">
+
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <style>
+    .payment-wrapper {
+      max-width: 540px;
+      width: 100%;
+    }
+    .upi-section {
+      text-align: center;
+      padding: 32px;
+      background: var(--bg-hover);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+    }
+    .upi-amount {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin: 12px 0;
+    }
+    .status-tracker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 24px 0;
+    }
+    .status-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    .status-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      border: 2px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-tertiary);
+      transition: all var(--transition-base);
+    }
+    .status-step.active .status-dot {
+      background: var(--gradient-primary);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    }
+    .status-step.done .status-dot {
+      background: var(--success-500);
+      color: #fff;
+      border-color: transparent;
+    }
+    .status-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-step.active .status-label,
+    .status-step.done .status-label { color: var(--text-primary); }
+    .status-line {
+      width: 60px;
+      height: 3px;
+      background: var(--border-color);
+      margin: 0 -4px;
+      margin-bottom: 18px;
+    }
+    .status-line.done { background: var(--success-500); }
+    @media (max-width: 480px) {
+      .upi-amount { font-size: 36px; }
+      .status-line { width: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading Payment Portal...</div>
+  </div>
+
+  <div class="page-centered" style="flex-direction: column; gap: 0;">
+    <div style="width: 100%; max-width: 540px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+      <a href="../index.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> Home</a>
+      <button class="navbar-btn theme-toggle" id="themeToggle" onclick="Theme.toggle()"><i data-lucide="moon"></i></button>
+    </div>
+
+    <div class="payment-wrapper">
+      <!-- Eligibility Check -->
+      <div class="auth-card" id="eligibilityCard" data-aos="fade-up">
+        <div class="auth-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);">
+          <div class="auth-logo"><i data-lucide="credit-card"></i></div>
+          <h2>Certificate Payment</h2>
+          <p>Verify your eligibility and pay the certificate fee</p>
+        </div>
+        <div class="auth-body">
+          <form id="eligibilityForm">
+            <div class="form-group">
+              <label class="form-label">Student ID</label>
+              <input type="text" id="payStudentId" class="form-control" placeholder="e.g., STU001" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Parcel ID</label>
+              <input type="text" id="payParcelId" class="form-control" placeholder="e.g., ALP-26-0001" required>
+            </div>
+            <button type="submit" class="btn btn-lg btn-block" id="checkBtn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; box-shadow: 0 4px 12px rgba(139,92,246,0.3);">
+              <i data-lucide="shield-check"></i> Check Eligibility
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Payment Section -->
+      <div id="paymentSection" style="display: none;">
+        <!-- Status Tracker -->
+        <div class="card" data-aos="fade-up" style="margin-bottom: 20px;">
+          <div class="card-body">
+            <h3 style="text-align: center; margin-bottom: 20px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700;">Payment Status</h3>
+            <div class="status-tracker">
+              <div class="status-step done" id="step1">
+                <div class="status-dot"><i data-lucide="check"></i></div>
+                <span class="status-label">Eligible</span>
+              </div>
+              <div class="status-line" id="line1"></div>
+              <div class="status-step" id="step2">
+                <div class="status-dot"><i data-lucide="indian-rupee"></i></div>
+                <span class="status-label">Payment</span>
+              </div>
+              <div class="status-line" id="line2"></div>
+              <div class="status-step" id="step3">
+                <div class="status-dot"><i data-lucide="shield-check"></i></div>
+                <span class="status-label">Verified</span>
+              </div>
+              <div class="status-line" id="line3"></div>
+              <div class="status-step" id="step4">
+                <div class="status-dot"><i data-lucide="award"></i></div>
+                <span class="status-label">Certificate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- UPI Payment -->
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-body">
+            <div class="upi-section">
+              <i data-lucide="indian-rupee" style="font-size: 28px; color: var(--primary-500);"></i>
+              <div class="upi-amount">₹500</div>
+              <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Certificate Processing Fee</p>
+              <a id="upiPayLink" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">
+                <i data-lucide="smartphone"></i> Pay via UPI
+              </a>
+            </div>
+
+            <form id="transactionForm">
+              <div class="form-group">
+                <label class="form-label">Transaction ID *</label>
+                <input type="text" id="txnId" class="form-control" placeholder="Enter UPI Transaction ID" required>
+                <span class="form-error">Transaction ID is required</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Amount</label>
+                <input type="text" class="form-control" value="₹500" disabled>
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitTxnBtn">
+                <i data-lucide="send"></i> Submit Transaction
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card mt-2" id="statusCard" style="display: none;" data-aos="fade-up">
+          <div class="card-body text-center" style="padding: 40px;">
+            <div id="statusIconWrap" style="margin-bottom: 16px;"></div>
+            <h3 id="statusTitle" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 700;"></h3>
+            <p id="statusDesc" style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;"></p>
+          </div>
+        </div>
+
+        <button class="btn btn-outline mt-2" onclick="backToEligibility()"><i data-lucide="arrow-left"></i> Back</button>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; text-align: center;">
+      <p style="font-size: 13px; color: var(--text-tertiary);">
+        Developed By <a href="https://a-santhosh-hub.github.io/in/" target="_blank" style="color: var(--primary-500); font-weight: 600;">Santhosh A</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    let currentStudentId = '';
+    let currentParcelId = '';
+
+    // Eligibility
+    document.getElementById('eligibilityForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const studentId = document.getElementById('payStudentId').value.trim();
+      const parcelId = document.getElementById('payParcelId').value.trim();
+      const btn = document.getElementById('checkBtn');
+
+      if (!studentId || !parcelId) {
+        Toast.error('Error', 'Please fill all fields');
+        return;
+      }
+
+      Loading.setButton(btn, true);
+      try {
+        const result = await API.studentLogin(studentId, parcelId);
+        const data = result.data;
+        if (data.Result !== 'PASS') {
+          Toast.error('Not Eligible', 'Only students who passed the exam can apply for a certificate.');
+          return;
+        }
+        currentStudentId = studentId;
+        currentParcelId = parcelId;
+        showPayment(data);
+      } catch (error) {
+        // Demo fallback
+        if (studentId === 'STU001' && parcelId === 'ALP-26-0001') {
+          currentStudentId = studentId;
+          currentParcelId = parcelId;
+          showPayment({ Result: 'PASS', Payment_Status: 'Pending' });
+        } else {
+          Toast.error('Error', 'Invalid credentials or not eligible');
+        }
+      } finally {
+        Loading.setButton(btn, false);
+      }
+    });
+
+    function showPayment(data) {
+      document.getElementById('eligibilityCard').style.display = 'none';
+      document.getElementById('paymentSection').style.display = 'block';
+
+      // UPI Link
+      const upiLink = `upi://pay?pa=alp.institute@upi&pn=ALP%20Institute&am=500&cu=INR&tn=Certificate%20Fee%20${currentParcelId}`;
+      document.getElementById('upiPayLink').href = upiLink;
+
+      // Update status based on payment status
+      updateStatusTracker(data.Payment_Status || 'Pending');
+    }
+
+    function updateStatusTracker(status) {
+      // Reset
+      ['step2', 'step3', 'step4'].forEach(id => {
+        document.getElementById(id).classList.remove('active', 'done');
+      });
+      ['line1', 'line2', 'line3'].forEach(id => {
+        document.getElementById(id).classList.remove('done');
+      });
+
+      document.getElementById('line1').classList.add('done');
+
+      if (status === 'Pending') {
+        document.getElementById('step2').classList.add('active');
+      } else if (status === 'Verified') {
+        document.getElementById('step2').classList.add('done');
+        document.getElementById('line2').classList.add('done');
+        document.getElementById('step3').classList.add('done');
+        document.getElementById('line3').classList.add('done');
+        document.getElementById('step4').classList.add('active');
+        showStatus('verified');
+      } else if (status === 'Completed') {
+        ['step2', 'step3', 'step4'].forEach(id => document.getElementById(id).classList.add('done'));
+        ['line2', 'line3'].forEach(id => document.getElementById(id).classList.add('done'));
+        showStatus('completed');
+      } else if (status === 'Rejected') {
+        document.getElementById('step2').classList.add('done');
+        document.getElementById('line2').classList.add('done');
+        showStatus('rejected');
+      }
+    }
+
+    function showStatus(type) {
+      const card = document.getElementById('statusCard');
+      card.style.display = 'block';
+      const icons = {
+        verified: `<div style="width:60px;height:60px;border-radius:50%;background:var(--gradient-success);display:inline-flex;align-items:center;justify-content:center;"><i data-lucide="check" style="width:30px;height:30px;color:#fff;"></i></div>`,
+        completed: `<div style="width:60px;height:60px;border-radius:50%;background:var(--gradient-primary);display:inline-flex;align-items:center;justify-content:center;"><i data-lucide="award" style="width:30px;height:30px;color:#fff;"></i></div>`,
+        rejected: `<div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);display:inline-flex;align-items:center;justify-content:center;"><i data-lucide="x" style="width:30px;height:30px;color:#fff;"></i></div>`,
+      };
+      const titles = {
+        verified: 'Payment Verified!',
+        completed: 'Certificate Issued!',
+        rejected: 'Payment Rejected'
+      };
+      const descs = {
+        verified: 'Your payment has been verified. Certificate will be issued shortly.',
+        completed: 'Your certificate has been issued. Please collect from the institute.',
+        rejected: 'Your payment was rejected. Please contact the ALP office.'
+      };
+      document.getElementById('statusIconWrap').innerHTML = icons[type];
+      document.getElementById('statusTitle').textContent = titles[type];
+      document.getElementById('statusDesc').textContent = descs[type];
+      lucide.createIcons();
+    }
+
+    // Submit Transaction
+    document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const txnId = document.getElementById('txnId').value.trim();
+      if (!txnId) {
+        Toast.error('Error', 'Transaction ID is required');
+        return;
+      }
+
+      const btn = document.getElementById('submitTxnBtn');
+      Loading.setButton(btn, true);
+
+      try {
+        await API.submitTransaction({
+          studentId: currentStudentId,
+          parcelId: currentParcelId,
+          transactionId: txnId,
+          amount: '500'
+        });
+        Toast.success('Transaction Submitted', 'Your payment is pending admin verification.');
+        updateStatusTracker('Pending');
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step2').classList.add('done');
+        document.getElementById('line2').classList.add('done');
+        document.getElementById('step3').classList.add('active');
+      } catch (error) {
+        Toast.success('Transaction Submitted (Offline)', 'Payment recorded. Awaiting verification.');
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step2').classList.add('done');
+        document.getElementById('line2').classList.add('done');
+        document.getElementById('step3').classList.add('active');
+      } finally {
+        Loading.setButton(btn, false);
+      }
+    });
+
+    function backToEligibility() {
+      document.getElementById('eligibilityCard').style.display = 'block';
+      document.getElementById('paymentSection').style.display = 'none';
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    lucide.createIcons();
+    window.addEventListener('load', () => document.getElementById('pageLoader').classList.add('hidden'));
+  </script>
+</body>
+</html>

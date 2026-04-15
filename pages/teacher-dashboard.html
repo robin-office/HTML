@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Panel - ALP Institute</title>
+  <meta name="description" content="Teacher correction panel for assigned parcels">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading Teacher Panel...</div>
+  </div>
+
+  <!-- Login Gate -->
+  <div class="page-centered" id="loginGate">
+    <div class="auth-card" data-aos="fade-up">
+      <div class="auth-header" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">
+        <div class="auth-logo"><i data-lucide="pen-tool"></i></div>
+        <h2>Teacher Login</h2>
+        <p>Enter your credentials to access your correction panel</p>
+      </div>
+      <div class="auth-body">
+        <form id="teacherLoginForm">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" id="teacherUser" class="form-control" placeholder="Enter username" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="teacherPass" class="form-control" placeholder="Enter password" required>
+          </div>
+          <button type="submit" class="btn btn-lg btn-block" id="loginBtn" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; box-shadow: 0 4px 12px rgba(245,158,11,0.3);">
+            <i data-lucide="log-in"></i> Login
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="app-layout" id="teacherApp" style="display: none;">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">T</div>
+        <div class="brand-text">
+          <span class="brand-name">Teacher Panel</span>
+          <span class="brand-sub">Correction Dashboard</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Navigation</div>
+        <a href="../index.html" class="nav-item"><i data-lucide="home"></i> Home</a>
+        <a href="#" class="nav-item active"><i data-lucide="pen-tool"></i> My Parcels</a>
+        <div class="nav-section-label">Quick Links</div>
+        <a href="result.html" class="nav-item"><i data-lucide="graduation-cap"></i> Results</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);" id="teacherAvatar">T</div>
+          <div class="user-info">
+            <span class="user-name" id="teacherNameDisplay">Teacher</span>
+            <span class="user-role">Evaluator</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+          <div>
+            <h1 class="page-title">Assigned Parcels</h1>
+            <p class="page-subtitle" id="teacherSubtitle">Review and mark corrections</p>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <button class="navbar-btn theme-toggle" id="themeToggle" onclick="Theme.toggle()"><i data-lucide="moon"></i></button>
+          <button class="navbar-btn" onclick="exportReport()" title="Export Report"><i data-lucide="download"></i></button>
+          <div class="profile-dropdown" onclick="Auth.logout()">
+            <div class="avatar-sm" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">T</div>
+            <span class="profile-name">Logout</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- Stats -->
+        <div class="stats-grid" data-aos="fade-up">
+          <div class="stat-card stat-primary">
+            <div class="stat-info">
+              <h4>Total Assigned</h4>
+              <div class="stat-value" id="tStatTotal">0</div>
+            </div>
+            <div class="stat-icon icon-primary"><i data-lucide="package"></i></div>
+          </div>
+          <div class="stat-card stat-warning">
+            <div class="stat-info">
+              <h4>Pending</h4>
+              <div class="stat-value" id="tStatPending">0</div>
+            </div>
+            <div class="stat-icon icon-warning"><i data-lucide="clock"></i></div>
+          </div>
+          <div class="stat-card stat-success">
+            <div class="stat-info">
+              <h4>Completed</h4>
+              <div class="stat-value" id="tStatDone">0</div>
+            </div>
+            <div class="stat-icon icon-success"><i data-lucide="check-circle"></i></div>
+          </div>
+        </div>
+
+        <!-- Parcels Table -->
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-header">
+            <h3><i data-lucide="clipboard-list" style="margin-right: 8px;"></i>Parcels for Correction</h3>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline btn-sm" onclick="exportTableToExcel('teacherTable', 'Corrections')"><i data-lucide="file-spreadsheet"></i> Excel</button>
+              <button class="btn btn-outline btn-sm" onclick="exportPDF()"><i data-lucide="file-text"></i> PDF</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+              <table class="data-table" id="teacherTable">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Course</th>
+                    <th>Parcel ID</th>
+                    <th>Parcel Type</th>
+                    <th>Enter Marks</th>
+                    <th>Result</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="teacherBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="app-footer">
+        <p>Developed By <a href="https://a-santhosh-hub.github.io/in/" target="_blank">Santhosh A</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/teacher.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sheetjs@latest/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    lucide.createIcons();
+    window.addEventListener('load', () => document.getElementById('pageLoader').classList.add('hidden'));
+  </script>
+</body>
+</html>

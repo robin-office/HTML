@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALP Institute - Parcel Tracking & Certification ERP</title>
+  <meta name="description" content="Astrology Institute Exam Parcel Tracking & Certification Management ERP System">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <style>
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -20%;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -15%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(236,72,153,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      position: relative;
+      z-index: 10;
+    }
+    .hero-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .hero-brand-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .hero-brand-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .hero-brand-sub {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .hero-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px 20px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-600);
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    [data-theme="dark"] .hero-badge { color: var(--primary-400); }
+    .hero-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(36px, 5vw, 60px);
+      font-weight: 900;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 20px;
+      max-width: 800px;
+      letter-spacing: -1.5px;
+    }
+    .hero-title .gradient-text {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 60px;
+    }
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      width: 100%;
+      padding: 0 24px;
+      margin: 0 auto;
+    }
+    .module-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all var(--transition-base);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .module-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .module-card:nth-child(1)::before { background: var(--gradient-primary); }
+    .module-card:nth-child(2)::before { background: var(--gradient-success); }
+    .module-card:nth-child(3)::before { background: var(--gradient-accent); }
+    .module-card:nth-child(4)::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .module-card:nth-child(5)::before { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+    .module-card:nth-child(6)::before { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+    .module-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .module-card:nth-child(1) .module-icon { background: var(--primary-50); color: var(--primary-600); }
+    .module-card:nth-child(2) .module-icon { background: var(--success-50); color: var(--success-600); }
+    .module-card:nth-child(3) .module-icon { background: rgba(236,72,153,0.08); color: var(--accent-500); }
+    .module-card:nth-child(4) .module-icon { background: var(--warning-50); color: var(--warning-600); }
+    .module-card:nth-child(5) .module-icon { background: rgba(6,182,212,0.08); color: #0891b2; }
+    .module-card:nth-child(6) .module-icon { background: rgba(139,92,246,0.08); color: #7c3aed; }
+    [data-theme="dark"] .module-card .module-icon { background: rgba(99,102,241,0.1); }
+    .module-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .module-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .module-card .module-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-500);
+      margin-top: auto;
+    }
+    .hero-footer {
+      padding: 28px 40px;
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      position: relative;
+      z-index: 10;
+    }
+    .hero-footer p {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+    .hero-footer a {
+      color: var(--primary-500);
+      font-weight: 600;
+    }
+    @media (max-width: 768px) {
+      .hero-nav { padding: 16px 20px; }
+      .hero-brand-name { font-size: 18px; }
+      .hero-nav-links .btn span { display: none; }
+      .module-grid { grid-template-columns: 1fr; }
+      .hero-main { padding: 40px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page Loader -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading ALP Institute...</div>
+  </div>
+
+  <div class="hero-section">
+    <!-- Navigation -->
+    <nav class="hero-nav">
+      <div class="hero-brand">
+        <div class="hero-brand-icon">A</div>
+        <div>
+          <div class="hero-brand-name">ALP Institute</div>
+          <div class="hero-brand-sub">Parcel Tracking & Certification ERP</div>
+        </div>
+      </div>
+      <div class="hero-nav-links">
+        <button class="navbar-btn theme-toggle" id="themeToggle" onclick="Theme.toggle()" title="Toggle Theme">
+          <i data-lucide="moon"></i>
+        </button>
+        <a href="pages/admin-dashboard.html" class="btn btn-outline btn-sm"><i data-lucide="shield"></i> <span>Admin</span></a>
+        <a href="pages/teacher-dashboard.html" class="btn btn-outline btn-sm"><i data-lucide="book-open"></i> <span>Teacher</span></a>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <main class="hero-main">
+      <div class="hero-badge" data-aos="fade-down">
+        <i data-lucide="sparkles"></i>
+        Production-Ready Institute ERP
+      </div>
+      <h1 class="hero-title" data-aos="fade-up" data-aos-delay="100">
+        Exam Parcel<br><span class="gradient-text">Tracking & Certification</span><br>Management System
+      </h1>
+      <p class="hero-desc" data-aos="fade-up" data-aos-delay="200">
+        Streamline your institute workflow — from parcel receiving to result publishing, certificate issuance, and course progression. All in one powerful platform.
+      </p>
+      <div class="hero-actions" data-aos="fade-up" data-aos-delay="300">
+        <a href="pages/parcel-entry.html" class="btn btn-primary btn-lg"><i data-lucide="package-plus"></i> Submit Parcel</a>
+        <a href="pages/result.html" class="btn btn-outline btn-lg"><i data-lucide="search"></i> Check Result</a>
+      </div>
+
+      <!-- Module Cards -->
+      <div class="module-grid">
+        <a href="pages/parcel-entry.html" class="module-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="module-icon"><i data-lucide="package-plus"></i></div>
+          <h3>Student Parcel Entry</h3>
+          <p>Submit exam parcels with student details, course category, and real-time tracking.</p>
+          <span class="module-link">Open Portal <i data-lucide="arrow-right"></i></span>
+        </a>
+        <a href="pages/parcel-receive.html" class="module-card" data-aos="fade-up" data-aos-delay="150">
+          <div class="module-icon"><i data-lucide="inbox"></i></div>
+          <h3>Staff Receive Panel</h3>
+          <p>Search, mark parcels received, auto-generate Parcel IDs, and send WhatsApp confirmations.</p>
+          <span class="module-link">Open Panel <i data-lucide="arrow-right"></i></span>
+        </a>
+        <a href="pages/admin-dashboard.html" class="module-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="module-icon"><i data-lucide="layout-dashboard"></i></div>
+          <h3>Admin Dashboard</h3>
+          <p>Full control center — manage students, teachers, assignments, stats, and analytics.</p>
+          <span class="module-link">Open Dashboard <i data-lucide="arrow-right"></i></span>
+        </a>
+        <a href="pages/teacher-dashboard.html" class="module-card" data-aos="fade-up" data-aos-delay="250">
+          <div class="module-icon"><i data-lucide="pen-tool"></i></div>
+          <h3>Teacher Correction</h3>
+          <p>Assigned parcels view, enter marks, auto pass/fail detection, and export reports.</p>
+          <span class="module-link">Open Panel <i data-lucide="arrow-right"></i></span>
+        </a>
+        <a href="pages/result.html" class="module-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="module-icon"><i data-lucide="graduation-cap"></i></div>
+          <h3>Student Result Portal</h3>
+          <p>Login with Student ID & Parcel ID to view marks, result status, and next course eligibility.</p>
+          <span class="module-link">Check Result <i data-lucide="arrow-right"></i></span>
+        </a>
+        <a href="pages/transaction.html" class="module-card" data-aos="fade-up" data-aos-delay="350">
+          <div class="module-icon"><i data-lucide="credit-card"></i></div>
+          <h3>Certificate Payment</h3>
+          <p>UPI payment for certificate fees, transaction tracking, and live verification status.</p>
+          <span class="module-link">Pay Now <i data-lucide="arrow-right"></i></span>
+        </a>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="hero-footer">
+      <p>Developed By <a href="https://a-santhosh-hub.github.io/in/" target="_blank" rel="noopener">Santhosh A</a> &bull; ALP Institute ERP &copy; 2026</p>
+    </footer>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    lucide.createIcons();
+    window.addEventListener('load', () => {
+      document.getElementById('pageLoader').classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
