@@ -709,13 +709,38 @@
             
             slots.forEach((slotEl) => {
                 const index = parseInt(slotEl.getAttribute('data-index'));
+                if (isNaN(index)) return; // Skip if no index found
                 const slot = TIMELINE_SCHEDULE[index];
-        window.switchView = function(viewId) {
-            // Determine the target view ID gracefully
-            const viewIdTarget = typeof viewId === 'string' ? viewId : this.getAttribute('onclick').match(/'([^']+)'/)[1];
-            
-            // Prevent default behavior if an event was passed
-            if (event && event.preventDefault) event.preventDefault();
+
+                const startMins = (slot.startH * 60) + slot.startM;
+                const endMins = (slot.endH * 60) + slot.endM;
+                const badge = slotEl.querySelector('.status-badge');
+                const cardBox = slotEl.classList.contains('card-box') ? slotEl : null;
+
+                if (badge) {
+                    if (currentMins >= startMins && currentMins < endMins) {
+                        badge.innerHTML = '<span class="ml-2 px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded animate-pulse border border-primary/30 uppercase tracking-wider">Active Now</span>';
+                        if (cardBox) cardBox.classList.add('border-primary', 'shadow-lg', 'shadow-primary/20');
+                        if (cardBox) cardBox.classList.remove('opacity-60', 'grayscale-[30%]');
+                    } else if (currentMins < startMins) {
+                        badge.innerHTML = '<span class="ml-2 px-2 py-0.5 bg-slate-700 text-slate-300 text-[10px] rounded uppercase tracking-wider">Upcoming</span>';
+                        if (cardBox) cardBox.classList.remove('border-primary', 'shadow-lg', 'shadow-primary/20', 'opacity-60', 'grayscale-[30%]');
+                    } else {
+                        badge.innerHTML = '<span class="ml-2 px-2 py-0.5 bg-slate-800 text-slate-500 text-[10px] rounded uppercase tracking-wider">Past</span>';
+                        if (cardBox) {
+                            cardBox.classList.remove('border-primary', 'shadow-lg', 'shadow-primary/20');
+                            cardBox.classList.add('opacity-60', 'grayscale-[30%]');
+                        }
+                    }
+                }
+            });
+        }
+
+        window.switchView = function(viewIdTarget) {
+            // Prevent default behavior safely
+            if (typeof event !== 'undefined' && event && event.preventDefault) {
+                event.preventDefault();
+            }
 
             // 1. Reset all links to inactive state
             document.querySelectorAll('.nav-link').forEach(el => { 
@@ -756,7 +781,7 @@
 
             // 6. Special actions (Charts)
             if(viewIdTarget === 'analytics') {
-                setTimeout(() => initCharts(window.appState.tasks), 50); // Small delay to ensure Canvas is visible
+                setTimeout(() => initCharts(window.appState.tasks), 50);
             }
         }
 
