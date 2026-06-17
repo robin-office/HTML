@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Santhosh Team | Operations Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a',
+                        darker: '#0b1120',
+                        primary: '#6366f1',
+                        accent: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Phosphor Icons & Chart.js & Fonts -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b1120; color: #f8fafc; }
+        
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: linear-gradient(145deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .kanban-col-content { min-height: 200px; max-height: calc(100vh - 280px); overflow-y: auto; padding-bottom: 2rem; }
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .task-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+        /* Smooth checkbox transition */
+        .strike-transition { transition: color 0.3s ease, text-decoration-color 0.3s ease; }
+
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 12px 20px; border-radius: 8px; background: #1e293b; color: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); border-left: 4px solid #6366f1; animation: slideIn 0.3s ease-out forwards, fadeOut 0.3s ease-in forwards 3s; display: flex; align-items: center; gap: 10px; }
+        .toast.success { border-color: #10b981; }
+        .toast.error { border-color: #ef4444; }
+        .toast.warning { border-color: #f59e0b; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex">
+
+    <aside class="w-64 glass border-r border-slate-800 flex flex-col justify-between h-full z-20 shrink-0 hidden md:flex transition-all duration-300">
+        <div>
+            <div class="h-20 flex items-center px-6 border-b border-slate-800/50">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                    <i class="ph-bold ph-planet text-white text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h1 class="text-sm font-bold tracking-wide text-white">SANTHOSH</h1>
+                    <p class="text-xs text-slate-400">Team Workspace</p>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-1 mt-4">
+                <button onclick="switchView('dashboard')" class="nav-link active w-full flex items-center gap-3 px-4 py-3 bg-white/10 text-white font-medium hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-squares-four text-xl"></i> Dashboard
+                </button>
+                <button onclick="switchView('generator')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-magic-wand text-xl"></i> Task Generator
+                </button>
+                <button onclick="switchView('kanban')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-kanban text-xl"></i> Task Board
+                </button>
+                <button onclick="switchView('checklist')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-check-square-offset text-xl"></i> Daily Checklist
+                </button>
+                <button onclick="switchView('planner')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-calendar-check text-xl"></i> Daily Planner
+                </button>
+                <button onclick="switchView('timetable')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-table text-xl"></i> Weekly Timetable
+                </button>
+                <button onclick="switchView('analytics')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-chart-line-up text-xl"></i> Analytics
+                </button>
+                <button onclick="switchView('content')" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                    <i class="ph ph-video-camera text-xl"></i> Content Library
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-slate-800/50">
+            <div class="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition cursor-pointer">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Santhosh&backgroundColor=6366f1" class="w-10 h-10 rounded-full bg-slate-800 border border-slate-600" alt="Avatar">
+                <div>
+                    <p class="text-sm font-semibold text-white">Santhosh Admin</p>
+                    <p class="text-xs text-success flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-success"></span> Online</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+        <header class="h-20 glass border-b border-slate-800 flex items-center justify-between px-8 z-10 sticky top-0">
+            <h2 id="page-title" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Dashboard Overview</h2>
+            
+            <div class="flex items-center gap-4">
+                <div class="glass px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 border-slate-700 tooltip relative group cursor-pointer" onclick="requestNotificationPermission()">
+                    <i class="ph ph-clock text-accent"></i>
+                    <span id="current-time">10:00 AM</span>
+                    <span class="text-xs text-slate-400 ml-1 font-mono">IST</span>
+                    <div class="absolute top-full right-0 mt-2 w-48 p-2 bg-slate-800 border border-slate-700 rounded shadow-lg text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        Click to enable browser notifications
+                    </div>
+                </div>
+                <button class="w-10 h-10 rounded-full glass hover:bg-white/10 flex items-center justify-center transition border-slate-700 relative" onclick="showToast('You are fully caught up!', 'info')">
+                    <i class="ph ph-bell text-xl"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full animate-pulse" id="notification-dot"></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8 relative z-0">
+
+            <div id="view-dashboard" class="view-section active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card p-6 border-t-4 border-t-primary relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 text-white/5 text-8xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-check-circle"></i></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Total Tasks Today</h3>
+                        <p class="text-3xl font-bold text-white" id="kpi-total">0</p>
+                    </div>
+                    <div class="glass-card p-6 border-t-4 border-t-warning relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 text-white/5 text-8xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-hourglass-high"></i></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Pending Work</h3>
+                        <p class="text-3xl font-bold text-white" id="kpi-pending">0</p>
+                    </div>
+                    <div class="glass-card p-6 border-t-4 border-t-success relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 text-white/5 text-8xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-rocket-launch"></i></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Completed</h3>
+                        <p class="text-3xl font-bold text-white" id="kpi-completed">0</p>
+                    </div>
+                    <div class="glass-card p-6 border-t-4 border-t-danger relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 text-white/5 text-8xl group-hover:scale-110 transition-transform"><i class="ph-fill ph-warning-circle"></i></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Missed / Overdue</h3>
+                        <p class="text-3xl font-bold text-white" id="kpi-missed">0</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="glass-card p-6 lg:col-span-2 flex flex-col justify-center">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2"><i class="ph ph-trend-up text-primary"></i> Today's Productivity Target</h3>
+                        <div class="relative w-full h-8 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out flex items-center justify-end px-3" style="width: 0%;">
+                                <span class="text-xs font-bold text-white drop-shadow-md" id="progress-text">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Current Shift</h3>
+                        <div class="space-y-4" id="shift-indicator">
+                            <!-- Populated via JS based on actual time -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-generator" class="view-section">
+                <div class="max-w-3xl mx-auto space-y-6 mt-10">
+                    <div class="glass-card p-8 text-center">
+                        <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 border border-primary/30">
+                            <i class="ph ph-robot text-3xl text-primary"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mb-2">Automated Task Generation</h2>
+                        <p class="text-slate-400 mb-8 max-w-lg mx-auto">Select a date below. The system will automatically read your Artist Schedule and generate the correct number of post requirements for every single platform.</p>
+                        
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <input type="date" id="generate-date" class="px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-primary w-full sm:w-auto" onchange="document.getElementById('kanban-date').value = this.value; loadTasksForDate();">
+                            <button onclick="generateTasks(event)" class="px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-bold hover:shadow-lg hover:shadow-primary/40 transition-all active:scale-95 flex items-center gap-2 w-full sm:w-auto justify-center shadow-lg">
+                                <i class="ph-bold ph-lightning"></i> Generate Workflow
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-kanban" class="view-section h-full flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="glass px-3 py-2 rounded-lg flex items-center gap-2 border-slate-700">
+                            <i class="ph ph-calendar text-slate-400"></i>
+                            <input type="date" id="kanban-date" class="bg-transparent text-sm text-white focus:outline-none cursor-pointer" onchange="loadTasksForDate()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 pb-10">
+                    <div class="glass-card flex flex-col h-full bg-slate-900/50">
+                        <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-800/30 rounded-t-xl">
+                            <h3 class="font-bold text-slate-300 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-slate-400"></div> Pending</h3>
+                            <span class="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-slate-400" id="count-pending">0</span>
+                        </div>
+                        <div class="p-3 kanban-col-content flex-1 space-y-3" id="col-pending" data-status="Pending"></div>
+                    </div>
+                    <div class="glass-card flex flex-col h-full bg-slate-900/50">
+                        <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-warning/10 rounded-t-xl">
+                            <h3 class="font-bold text-warning flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-warning animate-pulse"></div> In Progress</h3>
+                            <span class="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-warning" id="count-inprogress">0</span>
+                        </div>
+                        <div class="p-3 kanban-col-content flex-1 space-y-3" id="col-inprogress" data-status="In Progress"></div>
+                    </div>
+                    <div class="glass-card flex flex-col h-full bg-slate-900/50">
+                        <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-success/10 rounded-t-xl">
+                            <h3 class="font-bold text-success flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-success"></div> Completed</h3>
+                            <span class="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-success" id="count-completed">0</span>
+                        </div>
+                        <div class="p-3 kanban-col-content flex-1 space-y-3" id="col-completed" data-status="Completed"></div>
+                    </div>
+                    <div class="glass-card flex flex-col h-full bg-slate-900/50">
+                        <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-danger/10 rounded-t-xl">
+                            <h3 class="font-bold text-danger flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-danger"></div> Missed</h3>
+                            <span class="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-danger" id="count-missed">0</span>
+                        </div>
+                        <div class="p-3 kanban-col-content flex-1 space-y-3" id="col-missed" data-status="Missed"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-checklist" class="view-section h-full flex flex-col">
+                <div class="glass-card p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white mb-1">Chronological Posting Timeline</h2>
+                        <p class="text-sm text-slate-400">Follow this prioritized sequence from 10:00 AM to 6:00 PM. Check off tasks as you post them.</p>
+                    </div>
+                    <div class="glass px-3 py-2 rounded-lg flex items-center gap-2 border-slate-700">
+                        <i class="ph ph-calendar text-slate-400"></i>
+                        <input type="date" id="checklist-date" class="bg-transparent text-sm text-white focus:outline-none cursor-pointer" onchange="loadChecklistForDate()">
+                    </div>
+                </div>
+                
+                <!-- Timeline injects here without full re-renders on checkbox clicks! -->
+                <div class="flex-1 overflow-y-auto pr-2 pb-10" id="checklist-container"></div>
+            </div>
+
+            <div id="view-planner" class="view-section">
+                <div class="glass-card p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-1">Team Assignments</h2>
+                    <p class="text-sm text-slate-400">Allocate tasks to team members for the current shifts.</p>
+                </div>
+                <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-700">
+                                <th class="p-4">Task Details</th>
+                                <th class="p-4">Platform</th>
+                                <th class="p-4">Artist Scheduled</th>
+                                <th class="p-4">Shift</th>
+                                <th class="p-4">Assignee</th>
+                            </tr>
+                        </thead>
+                        <tbody id="planner-body" class="divide-y divide-slate-800/50 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-timetable" class="view-section">
+                <div class="glass-card overflow-hidden">
+                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-4 text-center border-b border-slate-700">
+                        <h2 class="text-lg font-bold text-white shadow-sm">Weekly Video Posting Timetable (Santhosh Team)</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-amber-200/10 text-sm font-semibold text-amber-200 border-b border-slate-700">
+                                    <th class="p-4 border-r border-slate-700/50 w-1/4">Day</th>
+                                    <th class="p-4 border-r border-slate-700/50 w-1/4"><i class="ph-fill ph-youtube-logo text-red-500 text-lg"></i> YouTube (YT)</th>
+                                    <th class="p-4 border-r border-slate-700/50 w-1/4"><i class="ph-fill ph-facebook-logo text-blue-500 text-lg"></i> Facebook (FB)</th>
+                                    <th class="p-4 w-1/4"><i class="ph-fill ph-instagram-logo text-pink-500 text-lg"></i> Instagram (IG)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm text-slate-300 divide-y divide-slate-700/50" id="timetable-body">
+                                <tr class="transition" data-day="0"><td class="p-4 font-bold text-white border-r border-slate-700/50">Sunday</td><td class="p-4 border-r border-slate-700/50">Volunteer 1</td><td class="p-4 border-r border-slate-700/50">ShanthiDevi Mam</td><td class="p-4">PothuvudaiMoorthy Sir</td></tr>
+                                <tr class="transition" data-day="1"><td class="p-4 font-bold text-white border-r border-slate-700/50">Monday</td><td class="p-4 border-r border-slate-700/50">SathyaNarayanan Sir</td><td class="p-4 border-r border-slate-700/50">Volunteer 2</td><td class="p-4">ShanthiDevi Mam</td></tr>
+                                <tr class="transition" data-day="2"><td class="p-4 font-bold text-white border-r border-slate-700/50">Tuesday</td><td class="p-4 border-r border-slate-700/50">Arularasi Mam</td><td class="p-4 border-r border-slate-700/50">PothuvudaiMoorthy Sir</td><td class="p-4">SathyaNarayanan Sir</td></tr>
+                                <tr class="transition" data-day="3"><td class="p-4 font-bold text-white border-r border-slate-700/50">Wednesday</td><td class="p-4 border-r border-slate-700/50">PothuvudaiMoorthy Sir</td><td class="p-4 border-r border-slate-700/50">ShanthiDevi Mam</td><td class="p-4">Volunteer 1</td></tr>
+                                <tr class="transition" data-day="4"><td class="p-4 font-bold text-white border-r border-slate-700/50">Thursday</td><td class="p-4 border-r border-slate-700/50">ShanthiDevi Mam</td><td class="p-4 border-r border-slate-700/50">SathyaNarayanan Sir</td><td class="p-4">Volunteer 2</td></tr>
+                                <tr class="transition" data-day="5"><td class="p-4 font-bold text-white border-r border-slate-700/50">Friday</td><td class="p-4 border-r border-slate-700/50">Volunteer 2</td><td class="p-4 border-r border-slate-700/50">Volunteer 1</td><td class="p-4">Arularasi Mam</td></tr>
+                                <tr class="transition" data-day="6"><td class="p-4 font-bold text-white border-r border-slate-700/50">Saturday</td><td class="p-4 border-r border-slate-700/50">SathyaNarayanan Sir</td><td class="p-4 border-r border-slate-700/50">Arularasi Mam</td><td class="p-4">PothuvudaiMoorthy Sir</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-analytics" class="view-section space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-card p-6"><h3 class="text-lg font-semibold mb-4 text-white">Platform Distribution</h3><div class="h-64 flex justify-center"><canvas id="platformChart"></canvas></div></div>
+                    <div class="glass-card p-6"><h3 class="text-lg font-semibold mb-4 text-white">Weekly Upload Trend</h3><div class="h-64"><canvas id="trendChart"></canvas></div></div>
+                </div>
+            </div>
+
+            <div id="view-content" class="view-section">
+                <div class="glass-card p-6 flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                    <div class="relative w-full sm:w-96">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-3 text-slate-400 text-lg"></i>
+                        <input type="text" id="search-content" placeholder="Search accounts, artists..." class="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white outline-none focus:border-primary transition">
+                    </div>
+                    <button onclick="exportToCSV()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl border border-slate-600 flex items-center gap-2 transition">
+                        <i class="ph ph-download-simple"></i> Export CSV
+                    </button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-800/50 text-xs uppercase text-slate-400">
+                            <tr><th class="p-4">Task Name & Date</th><th class="p-4">Account</th><th class="p-4">Artist</th><th class="p-4">Status</th></tr>
+                        </thead>
+                        <tbody id="content-library-body" class="divide-y divide-slate-800/50 text-sm text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script>
+        window.appState = {
+            tasks: [],
+            checklists: {}, 
+            currentDate: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }), // YYYY-MM-DD IST
+            charts: {},
+            alertsTriggered: {}
+        };
+
+        const ARTIST_SCHEDULE = {
+            0: { YT: 'Volunteer 1', FB: 'ShanthiDevi Mam', IG: 'PothuvudaiMoorthy Sir' },
+            1: { YT: 'SathyaNarayanan Sir', FB: 'Volunteer 2', IG: 'ShanthiDevi Mam' },
+            2: { YT: 'Arularasi Mam', FB: 'PothuvudaiMoorthy Sir', IG: 'SathyaNarayanan Sir' },
+            3: { YT: 'PothuvudaiMoorthy Sir', FB: 'ShanthiDevi Mam', IG: 'Volunteer 1' },
+            4: { YT: 'ShanthiDevi Mam', FB: 'SathyaNarayanan Sir', IG: 'Volunteer 2' },
+            5: { YT: 'Volunteer 2', FB: 'Volunteer 1', IG: 'Arularasi Mam' },
+            6: { YT: 'SathyaNarayanan Sir', FB: 'Arularasi Mam', IG: 'PothuvudaiMoorthy Sir' }
+        };
+
+        const ACCOUNTS = [
+            { name: 'IG - pm_vlogs.offical', platform: 'IG', priority: 'High', daily: 3, icon: 'instagram-logo', url: 'https://instagram.com/pm_vlogs.offical' },
+            { name: 'SHARECHAT ALP Astrology', platform: 'ShareChat', priority: 'High', daily: 3, icon: 'share-network', url: 'https://sharechat.com/' },
+            { name: 'Threads ALP Astrology', platform: 'Threads', priority: 'High', daily: 3, icon: 'threads-logo', url: 'https://threads.net/' },
+            { name: 'SASTI TV', platform: 'YT', priority: 'Normal', daily: 2, icon: 'youtube-logo', url: 'https://youtube.com/c/sastitv' },
+            { name: 'SIDDHAR BOOMI', platform: 'YT', priority: 'Normal', daily: 2, icon: 'youtube-logo', url: 'https://youtube.com/c/siddharboomi' },
+            { name: 'Kandathum Kettathum', platform: 'YT', priority: 'Normal', daily: 2, icon: 'youtube-logo', url: 'https://youtube.com/' },
+            { name: 'FB- வாக்கு யோகி', platform: 'FB', priority: 'Normal', daily: 2, icon: 'facebook-logo', url: 'https://facebook.com/' },
+            { name: 'FB- ALP SASTI TV', platform: 'FB', priority: 'Normal', daily: 2, icon: 'facebook-logo', url: 'https://facebook.com/' },
+            { name: 'FB-அட்சய லக்ன பத்ததி ஜோதிடம்', platform: 'FB', priority: 'Normal', daily: 2, icon: 'facebook-logo', url: 'https://facebook.com/' },
+            { name: 'FB-நம் ஜோதிடம்', platform: 'FB', priority: 'Normal', daily: 2, icon: 'facebook-logo', url: 'https://facebook.com/' },
+            { name: 'FB-ALP Astrology', platform: 'FB', priority: 'Normal', daily: 2, icon: 'facebook-logo', url: 'https://facebook.com/' },
+            { name: 'FB-Vakkuyogi', platform: 'FB', priority: 'Normal', daily: 2, icon: 'facebook-logo', url: 'https://facebook.com/' },
+            { name: 'alp astrology official', platform: 'IG', priority: 'Normal', daily: 2, icon: 'instagram-logo', url: 'https://instagram.com/' },
+            { name: 'TELEGRAM - ALP Astrology', platform: 'Telegram', priority: 'Normal', daily: 2, icon: 'telegram-logo', url: 'https://web.telegram.org/' },
+            { name: 'BLOGGER - ALP Astrology', platform: 'Blogger', priority: 'Normal', daily: 2, icon: 'article', url: 'https://blogger.com/' }
+        ];
+
+        const TIMELINE_SCHEDULE = [
+            { startH: 10, startM: 0, endH: 11, endM: 30, time: '10:00 AM - 11:30 AM', title: '🔥 Priority 1: Morning High-Impact', desc: 'Post to highest priority accounts.', suffix: 'Post 1 (Morning)', accounts: ['IG - pm_vlogs.offical', 'SHARECHAT ALP Astrology', 'Threads ALP Astrology', 'SASTI TV', 'SIDDHAR BOOMI', 'Kandathum Kettathum'] },
+            { startH: 11, startM: 30, endH: 13, endM: 0, time: '11:30 AM - 01:00 PM', title: '📱 Priority 2: Standard Morning Posts', desc: 'Complete standard updates.', suffix: 'Post 1 (Mid-Day)', accounts: ['FB- வாக்கு யோகி', 'FB- ALP SASTI TV', 'FB-அட்சய லக்ன பத்ததி ஜோதிடம்', 'FB-நம் ஜோதிடம்', 'FB-ALP Astrology', 'FB-Vakkuyogi', 'alp astrology official', 'TELEGRAM - ALP Astrology', 'BLOGGER - ALP Astrology'] },
+            { startH: 13, startM: 0, endH: 14, endM: 0, time: '01:00 PM - 02:00 PM', title: '🍱 Lunch Break', desc: 'Rest and recharge.', suffix: '', accounts: [], isBreak: true },
+            { startH: 14, startM: 0, endH: 15, endM: 30, time: '02:00 PM - 03:30 PM', title: '🔥 Priority 3: Afternoon High-Impact', desc: 'Second post for high priority.', suffix: 'Post 2 (Afternoon)', accounts: ['IG - pm_vlogs.offical', 'SHARECHAT ALP Astrology', 'Threads ALP Astrology', 'SASTI TV', 'SIDDHAR BOOMI', 'Kandathum Kettathum'] },
+            { startH: 15, startM: 30, endH: 17, endM: 0, time: '03:30 PM - 05:00 PM', title: '📱 Priority 4: Standard Afternoon Posts', desc: 'Second post for Facebook etc.', suffix: 'Post 2 (Evening)', accounts: ['FB- வாக்கு யோகி', 'FB- ALP SASTI TV', 'FB-அட்சய லக்ன பத்ததி ஜோதிடம்', 'FB-நம் ஜோதிடம்', 'FB-ALP Astrology', 'FB-Vakkuyogi', 'alp astrology official', 'TELEGRAM - ALP Astrology', 'BLOGGER - ALP Astrology'] },
+            { startH: 17, startM: 0, endH: 18, endM: 0, time: '05:00 PM - 06:00 PM', title: '🚀 Priority 5: Final Wrap-up', desc: 'Third post for High Priority accounts.', suffix: 'Post 3 (Wrap-up)', accounts: ['IG - pm_vlogs.offical', 'SHARECHAT ALP Astrology', 'Threads ALP Astrology'] }
+        ];
+
+        function getISTDateObj() {
+            let d = new Date();
+            let utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+            return new Date(utc + (3600000 * 5.5)); // IST offset
+        }
+
+        function loadData() {
+            const storedTasks = localStorage.getItem('santhosh_tasks');
+            if (storedTasks) window.appState.tasks = JSON.parse(storedTasks);
+            
+            const storedChecklists = localStorage.getItem('santhosh_checklists');
+            if (storedChecklists) window.appState.checklists = JSON.parse(storedChecklists);
+            
+            const storedAlerts = localStorage.getItem('santhosh_alerts');
+            if (storedAlerts) {
+                const alertsData = JSON.parse(storedAlerts);
+                if (alertsData.date === window.appState.currentDate) {
+                    window.appState.alertsTriggered = alertsData.triggered;
+                } else {
+                    window.appState.alertsTriggered = {};
+                }
+            }
+
+            // Sync Inputs
+            document.getElementById('kanban-date').value = window.appState.currentDate;
+            document.getElementById('generate-date').value = window.appState.currentDate;
+            document.getElementById('checklist-date').value = window.appState.currentDate;
+
+            renderUI();
+            
+            // Build checklist DOM once
+            buildChecklistDOM();
+            updateChecklistBadges(); // Sync UI styles based on IST
+        }
+
+        function saveData() {
+            localStorage.setItem('santhosh_tasks', JSON.stringify(window.appState.tasks));
+            renderUI();
+        }
+
+        window.generateTasks = function(e) {
+            const dateStr = document.getElementById('generate-date').value;
+            if(!dateStr) return showToast("Please select a date.", "error");
+
+            const btn = e ? e.currentTarget : null;
+            if(btn) { btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Generating...`; btn.disabled = true; }
+
+            const dayOfWeek = new Date(dateStr).getDay();
+            const scheduleForDay = ARTIST_SCHEDULE[dayOfWeek];
+            
+            if (window.appState.tasks.filter(t => t.date === dateStr).length > 0) {
+                showToast(`Tasks for ${dateStr} already generated!`, "warning");
+                if(btn) { btn.innerHTML = `<i class="ph-bold ph-lightning"></i> Generate Workflow`; btn.disabled = false; }
+                switchView(null, 'kanban');
+                return;
+            }
+
+            let generatedCount = 0;
+            for (const acc of ACCOUNTS) {
+                let artist = scheduleForDay[acc.platform] || 'Team Volunteer';
+                for(let i=1; i<=acc.daily; i++) {
+                    const shift = i % 2 !== 0 ? 'Morning Session (10-1)' : 'Afternoon Session (2-5)';
+                    window.appState.tasks.push({
+                        id: 'task_' + Date.now().toString(36) + Math.random().toString(36).substring(2),
+                        title: `Upload ${acc.platform} Content #${i}`, account: acc.name, platform: acc.platform,
+                        artist: artist, status: 'Pending', date: dateStr, shift: shift,
+                        assignee: shift.includes('Morning') ? 'Santhosh' : 'Volunteer', priority: acc.priority,
+                        icon: acc.icon, createdAt: new Date().toISOString()
+                    });
+                    generatedCount++;
+                }
+            }
+            saveData();
+            showToast(`Successfully generated ${generatedCount} tasks!`, "success");
+            if(btn) { btn.innerHTML = `<i class="ph-bold ph-lightning"></i> Generate Workflow`; btn.disabled = false; }
+            switchView('kanban');
+        };
+
+        function renderUI() {
+            const todaysTasks = window.appState.tasks.filter(t => t.date === window.appState.currentDate);
+            updateDashboard(todaysTasks);
+            updateKanban(todaysTasks);
+            updatePlanner(todaysTasks);
+            updateContentLibrary(window.appState.tasks);
+            initCharts(window.appState.tasks);
+        }
+
+        function getPlatformColorClass(platform) {
+            const map = {
+                'YT': 'text-red-500 bg-red-500/10 border-red-500/20', 'FB': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+                'IG': 'text-pink-500 bg-pink-500/10 border-pink-500/20', 'ShareChat': 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20',
+                'Threads': 'text-white bg-white/10 border-white/20', 'Telegram': 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20',
+                'Blogger': 'text-orange-500 bg-orange-500/10 border-orange-500/20'
+            };
+            return map[platform] || 'text-slate-300 bg-slate-800 border-slate-700';
+        }
+
+        function updateDashboard(tasks) {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.status === 'Completed').length;
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-pending').innerText = tasks.filter(t => t.status === 'Pending' || t.status === 'In Progress').length;
+            document.getElementById('kpi-completed').innerText = completed;
+            document.getElementById('kpi-missed').innerText = tasks.filter(t => t.status === 'Missed').length;
+
+            let pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${pct}%`;
+
+            // Active Shift Indicator based on IST
+            const now = getISTDateObj();
+            const hr = now.getHours();
+            let shiftHtml = '';
+            if (hr >= 10 && hr < 14) {
+                shiftHtml = `<div class="flex justify-between items-center p-3 rounded-lg bg-slate-800/50 border border-slate-700"><div><p class="text-sm font-bold text-white">Morning Session</p><p class="text-xs text-slate-400">10:00 AM - 1:00 PM</p></div><span class="px-2 py-1 bg-primary/20 text-primary text-xs rounded font-bold">Active</span></div>`;
+            } else if (hr >= 14 && hr < 18) {
+                shiftHtml = `<div class="flex justify-between items-center p-3 rounded-lg bg-slate-800/50 border border-slate-700"><div><p class="text-sm font-bold text-white">Afternoon Session</p><p class="text-xs text-slate-400">2:00 PM - 5:00 PM</p></div><span class="px-2 py-1 bg-primary/20 text-primary text-xs rounded font-bold">Active</span></div>`;
+            } else {
+                shiftHtml = `<div class="flex justify-between items-center p-3 rounded-lg bg-slate-800/20 border border-slate-700/50 opacity-60"><div><p class="text-sm font-bold text-white">Off Shift</p><p class="text-xs text-slate-400">Resting</p></div><span class="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded font-bold">Offline</span></div>`;
+            }
+            document.getElementById('shift-indicator').innerHTML = shiftHtml;
+        }
+
+        function updateKanban(tasks) {
+            const cols = { 'Pending': '', 'In Progress': '', 'Completed': '', 'Missed': '' };
+            const counts = { 'Pending': 0, 'In Progress': 0, 'Completed': 0, 'Missed': 0 };
+            
+            if(tasks.length === 0) {
+                cols['Pending'] = `<div class="text-center p-6 text-slate-500 border border-dashed border-slate-700 rounded-xl"><i class="ph ph-magic-wand text-3xl mb-2"></i><p class="text-sm">No tasks. Generate some!</p></div>`;
+            } else {
+                tasks.forEach(t => {
+                    if(cols[t.status] !== undefined) {
+                        const pfColors = getPlatformColorClass(t.platform);
+                        cols[t.status] += `
+                            <div class="task-card bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm hover:border-slate-500 relative" id="${t.id}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border ${pfColors}"><i class="ph ph-${t.icon}"></i> ${t.platform}</span>
+                                    <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs border border-slate-600">${t.assignee.charAt(0)}</div>
+                                </div>
+                                <h4 class="text-sm font-semibold text-white mb-1 leading-tight">${t.title}</h4>
+                                <p class="text-xs text-slate-400 mb-3 truncate">${t.account}</p>
+                                
+                                <div class="mt-3 pt-3 border-t border-slate-700/50 flex justify-between items-center gap-2">
+                                    <select onchange="updateTaskStatus('${t.id}', this.value)" class="bg-slate-900 border border-slate-600 text-[11px] rounded px-2 py-1.5 text-slate-300 focus:outline-none focus:border-primary flex-1 cursor-pointer appearance-none text-center">
+                                        <option value="Pending" ${t.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                        <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>🔥 In Progress</option>
+                                        <option value="Completed" ${t.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
+                                        <option value="Missed" ${t.status === 'Missed' ? 'selected' : ''}>❌ Missed</option>
+                                    </select>
+                                    ${t.status !== 'Completed' ? 
+                                        `<button onclick="updateTaskStatus('${t.id}', 'Completed')" class="w-8 h-8 shrink-0 rounded bg-success/20 text-success hover:bg-success hover:text-white transition flex items-center justify-center shadow-sm" title="Quick Complete"><i class="ph-bold ph-check"></i></button>` 
+                                        : 
+                                        `<div class="w-8 h-8 shrink-0 flex items-center justify-center"><i class="ph-fill ph-check-circle text-success text-xl"></i></div>`
+                                    }
+                                </div>
+                            </div>`;
+                        counts[t.status]++;
+                    }
+                });
+            }
+
+            for(let k in cols) {
+                let id = k.toLowerCase().replace(' ', '');
+                document.getElementById(`col-${id}`).innerHTML = cols[k];
+                document.getElementById(`count-${id}`).innerText = counts[k];
+            }
+        }
+
+        window.updateTaskStatus = (taskId, newStatus) => {
+            const taskIndex = window.appState.tasks.findIndex(t => t.id === taskId);
+            if(taskIndex > -1) {
+                window.appState.tasks[taskIndex].status = newStatus;
+                
+                // Save locally
+                localStorage.setItem('santhosh_tasks', JSON.stringify(window.appState.tasks));
+                
+                // Re-render only the components that need it
+                const todaysTasks = window.appState.tasks.filter(t => t.date === window.appState.currentDate);
+                updateKanban(todaysTasks);
+                updateDashboard(todaysTasks);
+                
+                showToast(`Marked as ${newStatus}`, newStatus === 'Completed' ? 'success' : 'info');
+            }
+        };
+
+        function updatePlanner(tasks) {
+            const tbody = document.getElementById('planner-body');
+            tbody.innerHTML = '';
+            if(tasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500"><i class="ph ph-calendar-x text-3xl mb-2"></i><p>No assignments found for this date.</p></td></tr>`;
+                return;
+            }
+            tasks.sort((a,b) => a.shift.localeCompare(b.shift)).forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="p-4"><p class="font-semibold text-white">${t.title}</p><p class="text-xs text-slate-400">${t.account}</p></td>
+                        <td class="p-4"><span class="px-2 py-1 text-xs rounded border ${getPlatformColorClass(t.platform)}">${t.platform}</span></td>
+                        <td class="p-4 text-slate-300">${t.artist}</td>
+                        <td class="p-4 text-xs font-medium text-slate-300">${t.shift}</td>
+                        <td class="p-4">
+                            <select onchange="updateTaskAssignee('${t.id}', this.value)" class="bg-slate-900 border border-slate-700 text-sm rounded px-2 py-1 text-white focus:outline-none focus:border-primary">
+                                <option value="Santhosh" ${t.assignee === 'Santhosh' ? 'selected' : ''}>Santhosh</option>
+                                <option value="Volunteer" ${t.assignee === 'Volunteer' ? 'selected' : ''}>Volunteer</option>
+                            </select>
+                        </td>
+                    </tr>`;
+            });
+        }
+        
+        window.updateTaskAssignee = (taskId, newAssignee) => {
+            const index = window.appState.tasks.findIndex(t => t.id === taskId);
+            if(index > -1) { 
+                window.appState.tasks[index].assignee = newAssignee; 
+                localStorage.setItem('santhosh_tasks', JSON.stringify(window.appState.tasks));
+                showToast(`Assigned to ${newAssignee}`, "success"); 
+            }
+        };
+
+        // DOM based checklist generation (Clean Sectioned View)
+        function buildChecklistDOM() {
+            const container = document.getElementById('checklist-container');
+            const date = window.appState.currentDate;
+            const dayChecks = window.appState.checklists[date] || {};
+            
+            // Replaced the vertical line with distinct spaced blocks
+            let html = '<div class="space-y-6 mt-4 pb-12">';
+            
+            TIMELINE_SCHEDULE.forEach((slot, index) => {
+                // Lunch Break Divider
+                if (slot.isBreak) {
+                    html += `
+                    <div class="flex items-center justify-center gap-4 py-2 timeline-slot" data-index="${index}">
+                        <div class="h-px bg-slate-700 flex-1"></div>
+                        <span class="text-slate-400 text-sm font-medium flex items-center gap-2"><i class="ph-fill ph-coffee"></i> ${slot.title} (${slot.time}) <span class="status-badge"></span></span>
+                        <div class="h-px bg-slate-700 flex-1"></div>
+                    </div>`;
+                    return;
+                }
+
+                // Clean Priority Block
+                html += `
+                <div class="glass-card overflow-hidden transition-all duration-300 timeline-slot card-box" data-index="${index}">
+                    
+                    <!-- Header Section -->
+                    <div class="p-4 border-b border-slate-700/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 header-box bg-slate-800/40 transition-colors">
+                        <div>
+                            <h3 class="font-bold text-lg text-white flex items-center gap-2">${slot.title} <span class="status-badge"></span></h3>
+                            <p class="text-xs text-slate-400 mt-1">${slot.desc}</p>
+                        </div>
+                        <span class="inline-flex items-center px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-accent whitespace-nowrap shadow-inner">
+                            <i class="ph ph-clock mr-1.5"></i> ${slot.time}
+                        </span>
+                    </div>
+
+                    <!-- Checklist Grid Section -->
+                    <div class="p-5 bg-slate-800/10">`;
+                
+                if (slot.accounts.length > 0) {
+                    // Responsive grid: 1 column on mobile, 2 on tablet, 3 on large screens
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">`;
+                    
+                    slot.accounts.forEach(accName => {
+                        const accObj = ACCOUNTS.find(a => a.name === accName);
+                        if(!accObj) return;
+                        
+                        const uniqueCheckId = `${accName} - ${slot.suffix}`;
+                        const isChecked = dayChecks[uniqueCheckId] ? 'checked' : '';
+                        const strikeClass = dayChecks[uniqueCheckId] ? 'line-through text-slate-500' : 'text-slate-200';
+                        
+                        html += `
+                            <div class="flex items-center justify-between p-3 bg-slate-900/50 hover:bg-slate-800 rounded-xl transition border border-slate-700/50 group">
+                                <label class="flex items-center gap-3 overflow-hidden pr-2 flex-1 cursor-pointer">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-800 border border-slate-700 shrink-0">
+                                        <i class="ph-fill ph-${accObj.icon} text-xl ${getPlatformColorClass(accObj.platform).split(' ')[0]}"></i>
+                                    </div>
+                                    <div class="flex flex-col overflow-hidden">
+                                        <span class="text-sm font-semibold strike-transition ${strikeClass} truncate" title="${accName}">${accName}</span>
+                                        <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">${slot.suffix}</span>
+                                    </div>
+                                </label>
+                                <div class="flex items-center gap-2 shrink-0 border-l border-slate-700/50 pl-3 ml-1">
+                                    <a href="${accObj.url}" target="_blank" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-primary/20 hover:text-primary transition-colors" title="Open Account Page">
+                                        <i class="ph ph-arrow-square-out text-lg"></i>
+                                    </a>
+                                    <input type="checkbox" class="w-6 h-6 rounded-md border-slate-600 bg-slate-800 cursor-pointer accent-primary transition-transform group-active:scale-90" ${isChecked} onchange="toggleChecklist('${uniqueCheckId}', this.checked, this)">
+                                </div>
+                            </div>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div></div>`;
+            });
+            container.innerHTML = html + '</div>';
+        }
+
+        // Silent Update Logic
+        window.toggleChecklist = function(uniqueId, isChecked, element) {
+            const date = window.appState.currentDate;
+            if (!window.appState.checklists[date]) window.appState.checklists[date] = {};
+            window.appState.checklists[date][uniqueId] = isChecked;
+            localStorage.setItem('santhosh_checklists', JSON.stringify(window.appState.checklists));
+            
+            // Target the span precisely within the new structure
+            const labelContainer = element.parentElement.previousElementSibling;
+            const labelSpan = labelContainer.querySelector('.strike-transition');
+            
+            if(isChecked) {
+                labelSpan.classList.add('line-through', 'text-slate-500');
+                labelSpan.classList.remove('text-slate-200');
+            } else {
+                labelSpan.classList.remove('line-through', 'text-slate-500');
+                labelSpan.classList.add('text-slate-200');
+            }
+        }
+
+        function updateChecklistBadges() {
+            const now = getISTDateObj();
+            const currentMins = (now.getHours() * 60) + now.getMinutes();
+            const slots = document.querySelectorAll('.timeline-slot');
+            
+            slots.forEach((slotEl) => {
+                const index = parseInt(slotEl.getAttribute('data-index'));
+                const slot = TIMELINE_SCHEDULE[index];
+        window.switchView = function(viewId) {
+            // Determine the target view ID gracefully
+            const viewIdTarget = typeof viewId === 'string' ? viewId : this.getAttribute('onclick').match(/'([^']+)'/)[1];
+            
+            // Prevent default behavior if an event was passed
+            if (event && event.preventDefault) event.preventDefault();
+
+            // 1. Reset all links to inactive state
+            document.querySelectorAll('.nav-link').forEach(el => { 
+                el.classList.remove('active', 'bg-white/10', 'text-white', 'font-medium'); 
+                el.classList.add('text-slate-400'); 
+            });
+            
+            // 2. Find the clicked link and set to active
+            const activeLink = document.querySelector(`.nav-link[onclick*="'${viewIdTarget}'"]`);
+            if(activeLink) {
+                activeLink.classList.add('active', 'bg-white/10', 'text-white', 'font-medium');
+                activeLink.classList.remove('text-slate-400');
+            }
+
+            // 3. Hide all view sections
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            // 4. Show the target view section
+            const targetElement = document.getElementById(`view-${viewIdTarget}`);
+            if (targetElement) {
+                targetElement.classList.add('active');
+            } else {
+                console.error(`Error: Could not find section view-${viewIdTarget}`);
+            }
+
+            // 5. Update Header Title
+            const titles = { 
+                'dashboard': 'Dashboard Overview', 
+                'generator': 'Task Generator', 
+                'kanban': 'Team Task Board', 
+                'checklist': 'Chronological Checklist', 
+                'planner': 'Daily Shift Planner', 
+                'timetable': 'Weekly Posting Timetable', 
+                'analytics': 'Performance Analytics', 
+                'content': 'Content Library' 
+            };
+            document.getElementById('page-title').innerText = titles[viewIdTarget] || 'Workspace';
+
+            // 6. Special actions (Charts)
+            if(viewIdTarget === 'analytics') {
+                setTimeout(() => initCharts(window.appState.tasks), 50); // Small delay to ensure Canvas is visible
+            }
+        }
+
+        window.exportToCSV = function() {
+            if(window.appState.tasks.length === 0) return showToast("No data to export", "warning");
+
+            let csv = "Task ID,Title,Account,Platform,Artist,Date,Status,Assignee\n";
+            window.appState.tasks.forEach(t => {
+                // Ensure text formatting doesn't break the CSV commas
+                const safe = (str) => String(str).replace(/"/g, '""');
+                csv += `"${safe(t.id)}","${safe(t.title)}","${safe(t.account)}","${safe(t.platform)}","${safe(t.artist)}","${safe(t.date)}","${safe(t.status)}","${safe(t.assignee)}"\n`;
+            });
+
+            // Creates a Modal inside the UI because direct downloads are blocked in iframes/preview windows
+            const modal = document.createElement('div');
+            modal.id = 'csv-modal';
+            modal.className = 'fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4';
+            modal.innerHTML = `
+                <div class="glass-card w-full max-w-2xl flex flex-col overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                    <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                        <h3 class="font-bold text-white flex items-center gap-2"><i class="ph ph-file-csv text-accent text-xl"></i> Export Data (CSV)</h3>
+                        <button onclick="document.getElementById('csv-modal').remove()" class="text-slate-400 hover:text-white transition"><i class="ph ph-x text-xl"></i></button>
+                    </div>
+                    <div class="p-4 bg-slate-900/50">
+                        <p class="text-xs text-slate-400 mb-2">Copy the data below and paste it directly into cell A1 of Microsoft Excel or Google Sheets.</p>
+                        <textarea id="csv-text" class="w-full h-64 p-3 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-slate-300 focus:outline-none focus:border-primary resize-none" readonly>${csv}</textarea>
+                    </div>
+                    <div class="p-4 border-t border-slate-700 bg-slate-800/50 flex justify-end gap-3">
+                        <button onclick="document.getElementById('csv-modal').remove()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                        <button onclick="copyCSV()" class="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-accent transition shadow-lg flex items-center gap-2"><i class="ph ph-copy"></i> Copy to Clipboard</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        window.copyCSV = function() {
+            const textarea = document.getElementById('csv-text');
+            textarea.select();
+            try {
+                // Using execCommand for max compatibility inside sandboxes
+                document.execCommand('copy');
+                showToast("CSV data copied to clipboard!", "success");
+                document.getElementById('csv-modal').remove();
+            } catch (err) {
+                showToast("Failed to copy data.", "error");
+            }
+        }
+
+        window.loadTasksForDate = () => { 
+            window.appState.currentDate = document.getElementById('kanban-date').value; 
+            renderUI(); 
+        };
+        window.loadChecklistForDate = () => { 
+            window.appState.currentDate = document.getElementById('checklist-date').value; 
+            buildChecklistDOM(); updateChecklistBadges(); 
+        };
+
+        function updateContentLibrary(tasks) {
+            const tbody = document.getElementById('content-library-body');
+            tbody.innerHTML = '';
+            if(tasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500">No content generated yet.</td></tr>`;
+                return;
+            }
+            [...tasks].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
+                let bClass = t.status === 'Completed' ? 'bg-success/20 text-success' : t.status === 'Pending' ? 'bg-slate-700 text-slate-300' : t.status === 'Missed' ? 'bg-danger/20 text-danger' : 'bg-warning/20 text-warning';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/5 transition border-b border-slate-800/50">
+                        <td class="p-4"><p class="font-medium text-white">${t.title}</p><p class="text-xs text-slate-500">${t.date}</p></td>
+                        <td class="p-4 text-slate-400"><i class="ph ph-${t.icon}"></i> ${t.account}</td>
+                        <td class="p-4 text-slate-400">${t.artist}</td>
+                        <td class="p-4"><span class="px-2 py-1 ${bClass} text-xs rounded">${t.status}</span></td>
+                    </tr>`;
+            });
+        }
+
+        function initCharts(tasks) {
+            const ctx1 = document.getElementById('platformChart');
+            const ctx2 = document.getElementById('trendChart');
+            if(!ctx1 || !ctx2) return;
+
+            if(window.appState.charts.pfChart) window.appState.charts.pfChart.destroy();
+            const pfCounts = {}; tasks.forEach(t => pfCounts[t.platform] = (pfCounts[t.platform] || 0) + 1);
+            window.appState.charts.pfChart = new Chart(ctx1, { type: 'doughnut', data: { labels: Object.keys(pfCounts), datasets: [{ data: Object.values(pfCounts), backgroundColor: ['#ef4444', '#3b82f6', '#ec4899', '#eab308', '#ffffff', '#06b6d4', '#f97316'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#cbd5e1' } } } } });
+
+            if(window.appState.charts.trChart) window.appState.charts.trChart.destroy();
+            window.appState.charts.trChart = new Chart(ctx2, { type: 'bar', data: { labels: ['Generated Tasks'], datasets: [{ label: 'Total Tasks', data: [tasks.length], backgroundColor: '#6366f1', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } } });
+        }
+
+        window.showToast = function(msg, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? 'ph-check-circle' : type === 'error' ? 'ph-warning-circle' : 'ph-info';
+            toast.innerHTML = `<i class="ph-fill ${icon} text-xl"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentElement) toast.parentElement.removeChild(toast); }, 3000);
+        }
+
+        window.requestNotificationPermission = function() {
+            if (!("Notification" in window)) return showToast("Browser does not support notifications", "warning");
+            Notification.requestPermission().then(permission => { if (permission === "granted") showToast("Alerts enabled successfully!", "success"); });
+        }
+
+        function checkAlerts() {
+            const now = getISTDateObj();
+            const currentMins = (now.getHours() * 60) + now.getMinutes();
+            const dateStr = window.appState.currentDate;
+            const dayChecks = window.appState.checklists[dateStr] || {};
+
+            TIMELINE_SCHEDULE.forEach((slot, index) => {
+                const startMins = (slot.startH * 60) + slot.startM;
+                const endMins = (slot.endH * 60) + slot.endM;
+                
+                if (startMins - currentMins === 10 && !window.appState.alertsTriggered[`${index}_up`]) {
+                    if("Notification" in window && Notification.permission === "granted") new Notification("Upcoming Session", { body: `${slot.title} starts in 10 minutes.` });
+                    window.appState.alertsTriggered[`${index}_up`] = true;
+                }
+                if (endMins - currentMins === 15 && !slot.isBreak && !window.appState.alertsTriggered[`${index}_end`]) {
+                    let missing = 0;
+                    slot.accounts.forEach(acc => { if (!dayChecks[`${acc} - ${slot.suffix}`]) missing++; });
+                    if (missing > 0 && "Notification" in window && Notification.permission === "granted") {
+                        new Notification("Hurry Up!", { body: `${missing} tasks pending for current slot!` });
+                    }
+                    window.appState.alertsTriggered[`${index}_end`] = true;
+                }
+            });
+            localStorage.setItem('santhosh_alerts', JSON.stringify({ date: dateStr, triggered: window.appState.alertsTriggered }));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            
+            // Highlight today in Timetable
+            const dayOfWeek = getISTDateObj().getDay();
+            document.querySelectorAll('#timetable-body tr').forEach(row => {
+                if (parseInt(row.getAttribute('data-day')) === dayOfWeek) {
+                    row.classList.add('bg-primary/20', 'border-l-4', 'border-primary');
+                }
+            });
+
+            // Start Realtime Engines (IST)
+            setInterval(() => {
+                const now = getISTDateObj();
+                document.getElementById('current-time').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+                if(now.getSeconds() === 0) {
+                    updateChecklistBadges(); // Sync UI styles quietly
+                    checkAlerts(); // Verify deadlines
+                }
+            }, 1000);
+        });
+
+    </script>
+</body>
+</html>
